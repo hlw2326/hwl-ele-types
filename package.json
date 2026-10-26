@@ -1,0 +1,15 @@
+{
+    "name": "@hlw-ele/types",
+    "version": "0.1.0",
+    "description": "hlw SDK 类型声明",
+    "types": "index.d.ts",
+    "files": [
+        "index.d.ts"
+    ],
+    "scripts": {
+        "prepublishOnly": "node ../hlw-ele-core/scripts/sync.mjs"
+    },
+    "publishConfig": {
+        "access": "public"
+    }
+}
