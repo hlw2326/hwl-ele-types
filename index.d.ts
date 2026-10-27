@@ -17,7 +17,7 @@ export interface AppInfo {
 	[key: string]: unknown;
 }
 /**
- * cool-ai 风格的字段配置
+ * 字段配置
  */
 export interface DbColumn {
 	pk?: boolean;
@@ -193,6 +193,10 @@ declare class ApiTools {
 	 * 宿主 userData 目录
 	 */
 	containerPath: () => string;
+	/**
+	 * 窗口 preload 地址，仅 main 使用
+	 */
+	getPreload: () => string;
 	/**
 	 * 用系统默认程序打开链接，仅支持 http/https
 	 * @param url 链接
@@ -435,11 +439,17 @@ declare class ApiWin {
 	autostart: (enabled: boolean) => Promise<void>;
 }
 declare const win: ApiWin;
-export type HlwAPI = typeof apis;
+export type HlwApis = typeof apis;
+/**
+ * 渲染层的 hlw，扩展包通过 declare module 合并自己的命名空间
+ */
+export interface HlwAPI extends HlwApis {
+}
 /**
  * 初始化 preload：暴露 hlw，并加载应用自带的 preload
+ * @param extra 扩展包提供的命名空间，如 { ai }
  */
-export declare function initPreload(): void;
+export declare function initPreload(extra?: Record<string, object>): void;
 
 declare namespace apis {
 	export { DbConfig, DbPage, FileFilter, FileSaveOptions, FileSelectOptions, HttpConfig, HttpError, HttpResponse, UserInfo, app, db, file, http, mp, notice, store, tools, user, win };
