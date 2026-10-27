@@ -143,12 +143,17 @@ declare class ApiApp {
 	/**
 	 * 获取当前应用信息
 	 */
-	getInfo: () => AppInfo;
+	info: () => AppInfo;
 	/**
 	 * 在容器窗口内打开应用，仅容器可调用
 	 * @param appInfo 应用信息，需要 main 地址
 	 */
 	launch: (appInfo: AppInfo) => Promise<void>;
+	/**
+	 * 以独立窗口打开应用，仅容器可调用
+	 * @param appInfo 应用信息，需要 main 地址
+	 */
+	openWindow: (appInfo: AppInfo) => Promise<void>;
 	/**
 	 * 关闭容器内的应用，回到容器页面
 	 */
@@ -180,7 +185,7 @@ declare class ApiApp {
 	 * 数据库加载完成
 	 * @param callback 回调，参数为 appId
 	 */
-	onDBInit: (callback: (appId: string) => void) => void;
+	onDbInit: (callback: (appId: string) => void) => void;
 }
 declare const app: ApiApp;
 declare class ApiTools {
@@ -193,10 +198,6 @@ declare class ApiTools {
 	 * 宿主 userData 目录
 	 */
 	containerPath: () => string;
-	/**
-	 * 窗口 preload 地址，仅 main 使用
-	 */
-	getPreload: () => string;
 	/**
 	 * 用系统默认程序打开链接，仅支持 http/https
 	 * @param url 链接
@@ -220,23 +221,23 @@ declare class ApiFile {
 	 * 文件或目录是否存在
 	 * @param target 路径
 	 */
-	exists: (target: string) => boolean;
+	exists: (target: string) => Promise<boolean>;
 	/**
 	 * 递归创建目录
 	 * @param dir 目录路径
 	 */
-	mkdirs: (dir: string) => void;
+	mkdirs: (dir: string) => Promise<void>;
 	/**
 	 * 递归删除目录
 	 * @param dir 目录路径
 	 */
-	delDir: (dir: string) => void;
+	delDir: (dir: string) => Promise<void>;
 	/**
 	 * 递归复制目录
 	 * @param src 源目录
 	 * @param dst 目标目录
 	 */
-	copyDir: (src: string, dst: string) => void;
+	copyDir: (src: string, dst: string) => Promise<void>;
 	/**
 	 * 选择文件或目录，取消返回空数组
 	 * @param options 选择配置
@@ -272,12 +273,12 @@ declare class ApiFile {
 	 * @param source 源图片路径
 	 * @returns 保存后的文件完整路径
 	 */
-	saveBg: (source: string) => string;
+	saveBg: (source: string) => Promise<string>;
 	/**
 	 * 删除应用的安装包目录
 	 * @param appId 应用标识
 	 */
-	delAsar: (appId: string) => void;
+	delAsar: (appId: string) => Promise<void>;
 }
 declare const file: ApiFile;
 declare class ApiDb {
@@ -350,22 +351,14 @@ declare class ApiHttp {
 	delete: <T = unknown>(url: string, config?: HttpConfig) => Promise<HttpResponse<T>>;
 }
 declare const http: ApiHttp;
-declare class ApiMp {
-	/**
-	 * 以独立窗口打开应用，仅容器可调用
-	 * @param appInfo 应用信息，需要 main 地址
-	 */
-	open: (appInfo: AppInfo) => Promise<void>;
-}
-declare const mp: ApiMp;
 declare class ApiNotice {
 	/**
-	 * 本地系统通知
+	 * 系统通知
 	 * @param title 标题
 	 * @param body 内容
 	 * @param icon 图标路径
 	 */
-	local: (title: string, body: string, icon?: string) => Promise<void>;
+	show: (title: string, body: string, icon?: string) => Promise<void>;
 }
 declare const notice: ApiNotice;
 declare class ApiStore {
@@ -421,9 +414,10 @@ declare class ApiWin {
 	 */
 	maximize: () => Promise<void>;
 	/**
-	 * 切换置顶
+	 * 设置置顶
+	 * @param enabled 是否置顶
 	 */
-	top: () => Promise<void>;
+	setTop: (enabled: boolean) => Promise<void>;
 	/**
 	 * 关闭当前窗口，容器会退出程序
 	 */
@@ -441,18 +435,13 @@ declare class ApiWin {
 declare const win: ApiWin;
 export type HlwApis = typeof apis;
 /**
- * 渲染层的 hlw，扩展包通过 declare module 合并自己的命名空间
+ * 渲染层的 hlw，插件通过 declare module 合并自己的命名空间
  */
 export interface HlwAPI extends HlwApis {
 }
-/**
- * 初始化 preload：暴露 hlw，并加载应用自带的 preload
- * @param extra 插件提供的命名空间，如 { ai }
- */
-export declare function init(extra?: Record<string, object>): void;
 
 declare namespace apis {
-	export { DbConfig, DbPage, FileFilter, FileSaveOptions, FileSelectOptions, HttpConfig, HttpError, HttpResponse, UserInfo, app, db, file, http, mp, notice, store, tools, user, win };
+	export { DbConfig, DbPage, FileFilter, FileSaveOptions, FileSelectOptions, HttpConfig, HttpError, HttpResponse, UserInfo, app, db, file, http, notice, store, tools, user, win };
 }
 
 export {};
