@@ -287,6 +287,30 @@ declare class ApiTools {
 	drag: (id: string, callback: (path: string, name: string, size: number) => void) => void;
 }
 declare const tools: ApiTools;
+/** 更新检查结果 */
+export interface UpdateResult {
+	/** 当前版本 */
+	current: string;
+	/** 最新版本 */
+	latest: string;
+	/** 是否有新版本 */
+	hasUpdate: boolean;
+}
+declare class ApiUpdate {
+	/**
+	 * 读取当前版本号
+	 */
+	version: () => Promise<string>;
+	/**
+	 * 检查最新版本
+	 */
+	check: () => Promise<UpdateResult>;
+	/**
+	 * 下载并安装新版本
+	 */
+	install: () => Promise<void>;
+}
+declare const update: ApiUpdate;
 declare class ApiFile {
 	/**
 	 * 文件或目录是否存在
@@ -533,7 +557,7 @@ declare class ApiWin {
 	 */
 	setTop: (enabled: boolean) => Promise<void>;
 	/**
-	 * 关闭当前窗口，容器会退出程序
+	 * 关闭当前窗口，容器会退出程序，开启最小化到托盘时隐藏窗口
 	 */
 	close: () => Promise<void>;
 	/**
@@ -544,7 +568,12 @@ declare class ApiWin {
 	 * 开机自启动
 	 * @param enabled 是否开启
 	 */
-	autostart: (enabled: boolean) => Promise<void>;
+	autoStart: (enabled: boolean) => Promise<void>;
+	/**
+	 * 最小化到系统托盘，关闭窗口时隐藏而不是退出，仅宿主窗口可用
+	 * @param enabled 是否开启
+	 */
+	tray: (enabled: boolean) => Promise<void>;
 }
 declare const win: ApiWin;
 export type HlwApis = typeof apis;
@@ -555,7 +584,7 @@ export interface HlwAPI extends HlwApis {
 }
 
 declare namespace apis {
-	export { DbConfig, DbPage, FileFilter, FileSaveOptions, FileSelectOptions, HttpConfig, HttpError, HttpResponse, LogFilter, LogLevel, LogQuery, LogRecord, LogResult, PluginInfo, PluginMeta, UserInfo, UserToken, app, db, file, http, logs, notice, plugins, store, tools, user, win };
+	export { DbConfig, DbPage, FileFilter, FileSaveOptions, FileSelectOptions, HttpConfig, HttpError, HttpResponse, LogFilter, LogLevel, LogQuery, LogRecord, LogResult, PluginInfo, PluginMeta, UpdateResult, UserInfo, UserToken, app, db, file, http, logs, notice, plugins, store, tools, update, user, win };
 }
 
 export {};
