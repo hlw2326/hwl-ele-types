@@ -201,6 +201,14 @@ export interface UserInfo {
 	id: string;
 	nickname: string;
 	phone: string;
+	avatarUrl: string;
+}
+/**
+ * 登录凭证
+ */
+export interface UserToken {
+	value: string;
+	expire: number;
 }
 declare class ApiApp {
 	/**
@@ -486,6 +494,10 @@ declare class ApiStore {
 	 */
 	has: (key: string) => Promise<boolean>;
 	/**
+	 * 读取当前应用的全部存储
+	 */
+	all: () => Promise<Record<string, unknown>>;
+	/**
 	 * 清空当前应用的全部存储
 	 */
 	clear: () => Promise<void>;
@@ -543,7 +555,7 @@ export interface HlwAPI extends HlwApis {
 }
 
 declare namespace apis {
-	export { DbConfig, DbPage, FileFilter, FileSaveOptions, FileSelectOptions, HttpConfig, HttpError, HttpResponse, LogFilter, LogLevel, LogQuery, LogRecord, LogResult, PluginInfo, PluginMeta, UserInfo, app, db, file, http, logs, notice, plugins, store, tools, user, win };
+	export { DbConfig, DbPage, FileFilter, FileSaveOptions, FileSelectOptions, HttpConfig, HttpError, HttpResponse, LogFilter, LogLevel, LogQuery, LogRecord, LogResult, PluginInfo, PluginMeta, UserInfo, UserToken, app, db, file, http, logs, notice, plugins, store, tools, user, win };
 }
 
 export {};
@@ -794,6 +806,8 @@ export interface DmGiftItem {
 	id: string;
 	name: string;
 	icon: string;
+	/** 礼物价值，部分礼物没有 */
+	price?: number;
 }
 /**
  * 单条弹幕消息
@@ -881,6 +895,10 @@ export interface DmMockTypeConfig {
 	enabled: boolean;
 	/** 生成间隔（毫秒），0 表示只手动生成 */
 	interval: number;
+	users: DmMockUser[];
+}
+export interface DmMockTextConfig extends DmMockTypeConfig {
+	texts: string[];
 }
 /**
  * 假人数据配置，所有文本都由渲染层传入
@@ -889,15 +907,21 @@ export interface DmMockConfig {
 	/** 是否随应用启动 */
 	enabled: boolean;
 	platform: string;
-	/** 假人列表（头像/ID/昵称/等级） */
-	users: DmMockUser[];
-	/** 除礼物外每种类型自己的文案池，礼物从 hlw.dm.gift 取 */
-	texts: Record<DmTextType, string[]>;
-	/** 每种类型的开关与生成间隔，互不影响 */
-	types: Record<DmType, DmMockTypeConfig>;
+	types: {
+		chat: DmMockTextConfig;
+		gift: DmMockTypeConfig;
+		like: DmMockTextConfig;
+		follow: DmMockTextConfig;
+		join: DmMockTextConfig;
+	};
 }
-/** 除礼物外的弹幕类型 */
-export type DmTextType = Exclude<DmType, "gift">;
+export interface DmMockInput {
+	enabled?: boolean;
+	platform?: string;
+	types?: {
+		[K in DmType]?: Partial<DmMockConfig["types"][K]>;
+	};
+}
 /**
  * 假人数据状态
  */
@@ -908,7 +932,7 @@ export interface DmMockState {
 }
 export interface DmMockAPI {
 	state: () => Promise<DmMockState>;
-	save: (config: Partial<DmMockConfig>) => Promise<DmMockState>;
+	save: (config: DmMockInput) => Promise<DmMockState>;
 	start: () => Promise<DmMockState>;
 	stop: () => Promise<DmMockState>;
 	send: (type?: DmType) => Promise<DmMockState>;
