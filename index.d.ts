@@ -195,6 +195,10 @@ export interface PluginInfo extends PluginMeta {
 	loaded: boolean;
 }
 /**
+ * 消息级别
+ */
+export type ToastSeverity = "info" | "success" | "warn" | "error" | "secondary" | "contrast";
+/**
  * 用户信息
  */
 export interface UserInfo {
@@ -221,10 +225,20 @@ declare class ApiApp {
 	 */
 	launch: (appInfo: AppInfo) => Promise<void>;
 	/**
-	 * 以独立窗口打开应用，仅容器可调用
+	 * 关闭容器内的应用并销毁视图
+	 * @param appId 应用标识
+	 */
+	close: (appId: string) => Promise<void>;
+	/**
+	 * 把应用脱离宿主窗口，以独立窗口打开
 	 * @param appInfo 应用信息，需要 main 地址
 	 */
 	openWindow: (appInfo: AppInfo) => Promise<void>;
+	/**
+	 * 关闭指定独立窗口，同时结束应用
+	 * @param appId 应用标识
+	 */
+	closeWindow: (appId: string) => Promise<void>;
 	/**
 	 * 关闭容器内的应用，回到容器页面
 	 */
@@ -259,123 +273,6 @@ declare class ApiApp {
 	onDbInit: (callback: (appId: string) => void) => void;
 }
 declare const app: ApiApp;
-declare class ApiTools {
-	#private;
-	/**
-	 * 当前系统平台：win32 / darwin / linux
-	 */
-	platform: Platform;
-	/**
-	 * 宿主 userData 目录
-	 */
-	containerPath: () => string;
-	/**
-	 * 用系统默认程序打开链接，仅支持 http/https
-	 * @param url 链接
-	 */
-	openExternal: (url: string) => Promise<void>;
-	/**
-	 * 在文件管理器中显示文件
-	 * @param path 文件路径
-	 */
-	showItemInFolder: (path: string) => Promise<void>;
-	/**
-	 * 监听拖拽文件到指定元素
-	 * @param id 元素 id
-	 * @param callback 回调，参数为文件路径、文件名、文件大小
-	 */
-	drag: (id: string, callback: (path: string, name: string, size: number) => void) => void;
-}
-declare const tools: ApiTools;
-/** 更新检查结果 */
-export interface UpdateResult {
-	/** 当前版本 */
-	current: string;
-	/** 最新版本 */
-	latest: string;
-	/** 是否有新版本 */
-	hasUpdate: boolean;
-}
-declare class ApiUpdate {
-	/**
-	 * 读取当前版本号
-	 */
-	version: () => Promise<string>;
-	/**
-	 * 检查最新版本
-	 */
-	check: () => Promise<UpdateResult>;
-	/**
-	 * 下载并安装新版本
-	 */
-	install: () => Promise<void>;
-}
-declare const update: ApiUpdate;
-declare class ApiFile {
-	/**
-	 * 文件或目录是否存在
-	 * @param target 路径
-	 */
-	exists: (target: string) => Promise<boolean>;
-	/**
-	 * 递归创建目录
-	 * @param dir 目录路径
-	 */
-	mkdirs: (dir: string) => Promise<void>;
-	/**
-	 * 递归删除目录
-	 * @param dir 目录路径
-	 */
-	delDir: (dir: string) => Promise<void>;
-	/**
-	 * 递归复制目录
-	 * @param src 源目录
-	 * @param dst 目标目录
-	 */
-	copyDir: (src: string, dst: string) => Promise<void>;
-	/**
-	 * 选择文件或目录，取消返回空数组
-	 * @param options 选择配置
-	 */
-	select: (options?: FileSelectOptions) => Promise<string[]>;
-	/**
-	 * 选择保存路径，取消返回空字符串
-	 * @param options 保存配置
-	 */
-	saveDialog: (options?: FileSaveOptions) => Promise<string>;
-	/**
-	 * 读取文本文件，路径相对 userData
-	 * @param file 文件路径
-	 */
-	readText: (file: string) => Promise<string>;
-	/**
-	 * 写入文本文件，路径相对 userData，目录不存在会自动创建
-	 * @param file 文件路径
-	 * @param content 文件内容
-	 */
-	writeText: (file: string, content: string) => Promise<void>;
-	/**
-	 * 下载文件到指定目录
-	 * @param url 下载地址
-	 * @param dir 保存目录，不存在则创建
-	 * @param name 保存的文件名
-	 * @param onProgress 下载进度回调，参数为百分比
-	 * @returns 下载后的文件完整路径
-	 */
-	download: (url: string, dir: string, name: string, onProgress?: (percent: number) => void) => Promise<string>;
-	/**
-	 * 保存背景图到 Data/bg
-	 * @param source 源图片路径
-	 * @returns 保存后的文件完整路径
-	 */
-	saveBg: (source: string) => Promise<string>;
-	/**
-	 * 删除应用的安装包目录
-	 * @param appId 应用标识
-	 */
-	delAsar: (appId: string) => Promise<void>;
-}
-declare const file: ApiFile;
 declare class ApiDb {
 	/**
 	 * 查询
@@ -412,6 +309,71 @@ declare class ApiDb {
 	getConfig: () => Promise<DbConfig | undefined>;
 }
 declare const db: ApiDb;
+declare class ApiFile {
+	/**
+	 * 文件或目录是否存在
+	 * @param target 路径
+	 */
+	exists: (target: string) => Promise<boolean>;
+	/**
+	 * 递归创建目录
+	 * @param dir 目录路径
+	 */
+	mkdirs: (dir: string) => Promise<void>;
+	/**
+	 * 递归删除目录
+	 * @param dir 目录路径
+	 */
+	delDir: (dir: string) => Promise<void>;
+	/**
+	 * 递归复制目录，路径相对 userData
+	 * @param src 源目录
+	 * @param dst 目标目录
+	 */
+	copyDir: (src: string, dst: string) => Promise<void>;
+	/**
+	 * 选择文件或目录，取消返回空数组
+	 * @param options 选择配置
+	 */
+	select: (options?: FileSelectOptions) => Promise<string[]>;
+	/**
+	 * 选择保存路径，取消返回空字符串
+	 * @param options 保存配置
+	 */
+	saveDialog: (options?: FileSaveOptions) => Promise<string>;
+	/**
+	 * 读取文本文件，路径相对 userData
+	 * @param file 文件路径
+	 */
+	readText: (file: string) => Promise<string>;
+	/**
+	 * 写入文本文件，路径相对 userData，目录不存在会自动创建
+	 * @param file 文件路径
+	 * @param content 文件内容
+	 */
+	writeText: (file: string, content: string) => Promise<void>;
+	/**
+	 * 下载文件到指定目录
+	 * @param url 下载地址
+	 * @param dir 保存目录，不存在则创建
+	 * @param name 保存的文件名
+	 * @param onProgress 下载进度回调，参数为百分比
+	 * @returns 下载后的文件完整路径
+	 */
+	download: (url: string, dir: string, name: string, onProgress?: (percent: number) => void) => Promise<string>;
+	/**
+	 * 保存背景图到 Data/bg，仅宿主可调用
+	 * @param source 源图片路径
+	 * @returns 保存后的文件完整路径
+	 */
+	saveBg: (source: string) => Promise<string>;
+	/**
+	 * 删除应用的安装包目录，仅宿主可调用
+	 * @param appId 应用标识
+	 */
+	delAsar: (appId: string) => Promise<void>;
+}
+declare const file: ApiFile;
 declare class ApiHttp {
 	/**
 	 * 拦截器，写法和 axios 一致
@@ -527,6 +489,71 @@ declare class ApiStore {
 	clear: () => Promise<void>;
 }
 declare const store: ApiStore;
+declare class ApiToast {
+	/**
+	 * 显示消息
+	 * @param message 消息内容
+	 * @param severity 消息级别
+	 */
+	show: (message: string, severity?: ToastSeverity) => Promise<void>;
+}
+declare const toast: ApiToast;
+declare class ApiTools {
+	#private;
+	/**
+	 * 当前系统平台：win32 / darwin / linux
+	 */
+	platform: Platform;
+	/**
+	 * 宿主 userData 目录
+	 */
+	containerPath: () => string;
+	/**
+	 * 用系统默认程序打开链接，仅支持 http/https
+	 * @param url 链接
+	 */
+	openExternal: (url: string) => Promise<void>;
+	/**
+	 * 在文件管理器中显示文件
+	 * @param path 文件路径
+	 */
+	showItemInFolder: (path: string) => Promise<void>;
+	/**
+	 * 清理网络缓存，仅宿主可调用，不影响设置与数据库
+	 */
+	clearCache: () => Promise<void>;
+	/**
+	 * 监听拖拽文件到指定元素
+	 * @param id 元素 id
+	 * @param callback 回调，参数为文件路径、文件名、文件大小
+	 */
+	drag: (id: string, callback: (path: string, name: string, size: number) => void) => void;
+}
+declare const tools: ApiTools;
+/** 更新检查结果 */
+export interface UpdateResult {
+	/** 当前版本 */
+	current: string;
+	/** 最新版本 */
+	latest: string;
+	/** 是否有新版本 */
+	hasUpdate: boolean;
+}
+declare class ApiUpdate {
+	/**
+	 * 读取当前版本号
+	 */
+	version: () => Promise<string>;
+	/**
+	 * 检查最新版本
+	 */
+	check: () => Promise<UpdateResult>;
+	/**
+	 * 下载并安装新版本
+	 */
+	install: () => Promise<void>;
+}
+declare const update: ApiUpdate;
 declare class ApiUser {
 	/**
 	 * 当前登录用户信息
@@ -539,6 +566,10 @@ declare class ApiUser {
 }
 declare const user: ApiUser;
 declare class ApiWin {
+	/**
+	 * 通知主进程渲染层已就绪，宿主窗口收到后显示，重复调用无副作用
+	 */
+	ready: () => Promise<void>;
 	/**
 	 * 隐藏窗口
 	 */
@@ -556,6 +587,10 @@ declare class ApiWin {
 	 * @param enabled 是否置顶
 	 */
 	setTop: (enabled: boolean) => Promise<void>;
+	/**
+	 * 当前窗口是否置顶
+	 */
+	getTop: () => Promise<boolean>;
 	/**
 	 * 关闭当前窗口，容器会退出程序，开启最小化到托盘时隐藏窗口
 	 */
@@ -584,7 +619,7 @@ export interface HlwAPI extends HlwApis {
 }
 
 declare namespace apis {
-	export { DbConfig, DbPage, FileFilter, FileSaveOptions, FileSelectOptions, HttpConfig, HttpError, HttpResponse, LogFilter, LogLevel, LogQuery, LogRecord, LogResult, PluginInfo, PluginMeta, UpdateResult, UserInfo, UserToken, app, db, file, http, logs, notice, plugins, store, tools, update, user, win };
+	export { DbConfig, DbPage, FileFilter, FileSaveOptions, FileSelectOptions, HttpConfig, HttpError, HttpResponse, LogFilter, LogLevel, LogQuery, LogRecord, LogResult, PluginInfo, PluginMeta, UpdateResult, UserInfo, UserToken, app, db, file, http, logs, notice, plugins, store, toast, tools, update, user, win };
 }
 
 export {};
