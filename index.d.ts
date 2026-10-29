@@ -952,17 +952,38 @@ export interface DmMockUser {
 	level: number;
 }
 /**
+ * 数值范围
+ */
+export interface DmMockRange {
+	min: number;
+	max: number;
+}
+/**
  * 单种类型的生成配置
  */
 export interface DmMockTypeConfig {
 	/** 是否生成该类型 */
 	enabled: boolean;
-	/** 生成间隔（毫秒），0 表示只手动生成 */
-	interval: number;
+	/** 生成间隔范围（毫秒），max 为 0 表示只手动生成 */
+	interval: DmMockRange;
 	users: DmMockUser[];
 }
 export interface DmMockTextConfig extends DmMockTypeConfig {
 	texts: string[];
+}
+/** 参与生成的礼物与权重 */
+export interface DmMockGift {
+	/** 礼物字典 id */
+	id: string;
+	/** 权重，越大越容易出现 */
+	weight: number;
+}
+export interface DmMockGiftConfig extends DmMockTypeConfig {
+	gifts: DmMockGift[];
+}
+export interface DmMockLikeConfig extends DmMockTypeConfig {
+	/** 单条点赞的数量范围 */
+	count: DmMockRange;
 }
 /**
  * 假人数据配置，所有文本都由渲染层传入
@@ -973,8 +994,8 @@ export interface DmMockConfig {
 	platform: string;
 	types: {
 		chat: DmMockTextConfig;
-		gift: DmMockTypeConfig;
-		like: DmMockTextConfig;
+		gift: DmMockGiftConfig;
+		like: DmMockLikeConfig;
 		follow: DmMockTextConfig;
 		join: DmMockTextConfig;
 	};
